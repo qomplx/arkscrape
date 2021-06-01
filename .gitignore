@@ -1,0 +1,8 @@
+cases/
+.env
+*/*.txt
+*/*.json
+*/*.csv
+*/*.jpg
+*.txt
+
