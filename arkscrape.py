@@ -17,74 +17,67 @@ def first_run():
     archive_folder = input("Name for Archive Folder: ")
     shodan_key = os.getenv('SHODAN_API')
 
-    os.mkdir('cases')
-    os.mkdir('cases/default')
+    if os.path.isdir('cases') == True:
+        pass
+    else:
+        os.mkdir('cases')
 
     os.mkdir('cases/{}'.format(archive_folder))
 
     print("=== ARCHIVE SETUP ===")
-    os.system("cd cases/{} && archivebox init --setup".format(archive_folder))
+    os.system("cd cases/{} && archivebox init --setup && archivebox config --set SAVE_ARCHIVE_DOT_ORG=false".format(archive_folder))
 
     os.system("cd ../../")
-
-    print("=== DEFAULT ARCHIVE SETUP ===")
-
-    os.system("cd cases/default && archivebox init --setup")
-
-    os.system("archivebox config --set SAVE_ARCHIVE_DOT_ORG=false")
-
-    os.system("cd ../../")
-
 
     print("=== SHODAN SETUP ===")
     os.system("shodan init {}".format(shodan_key))
-
-    print("=== ENSURE GOBUSTER IS INSTALLED ON THE SYSTEM TO USE SCRAPING FUNCTIONS ===")
-
-    return "=== SETUP COMPLETED ==="
+    #
+    # print("=== ENSURE GOBUSTER IS INSTALLED ON THE SYSTEM TO USE SCRAPING FUNCTIONS ===")
+    #
+    # return "=== SETUP COMPLETED ==="
 
 def start_archivebox(folder):
 
+
+    print("=== Starting Server ===")
     if os.path.isdir("cases/{}".format(folder)):
         pass
     else:
         os.mkdir("cases/{}".format(folder))
 
-    os.chdir("cases/{}".format(folder))
+        os.system("archivebox init --setup")
 
-    os.system("archivebox init --setup")
-    os.system("archivebox config --set SAVE_ARCHIVE_DOT_ORG=false")
+        os.system("archivebox config --set SAVE_ARCHIVE_DOT_ORG=false")
+
+    os.chdir("cases/{}".format(folder))
 
     os.system("archivebox server")
 
 
 def get_shodan(domain, folder='default'):
 
-    print("1")
-    if os.path.isdir("{}/shodan".format(folder)):
+    if os.path.isdir("cases/{}/shodan".format(folder)):
         pass
     else:
-        os.mkdir("{}/shodan".format(folder))
-    print("2")
+        os.mkdir("cases/{}/shodan".format(folder))
+
 
     try:
-        os.system("cd {}/shodan && shodan download {}-export domain {}".format(folder, today(), domain))
+        os.system("cd cases/{}/shodan && shodan download {}-export domain {}".format(folder, today(), domain))
     except Exception as e:
 
         print("Exception {}".format(e))
 
     return "shodan done"
 
-def scrape_domain(domain, folder='default'):
+def scrape_domain(domain, folder):
 
-    if os.path.isdir('{}/scrape'.format(folder)):
-        pass
-    else:
-        os.mkdir('{}/scrape'.format(folder))
+    if os.path.isdir('cases/{}/scrape'.format(folder)) is False:
+        os.mkdir('cases/{}/scrape'.format(folder))
 
-    os.system("gobuster dir -u {} -w big.txt > {}/scrape/{}-{}-scrape.txt".format(domain, folder, today(), domain))
+    os.system("gobuster dir -u {} -w big.txt > cases/{}/scrape/{}-{}-scrape.txt".format(domain, folder, today(), domain))
 
-    os.system("gobuster dns -d {} -w big.txt > {}/scrape/{}-{}-scrape-dns.txt".format(domain, folder, today(), domain))
+    os.system("gobuster dns -d {} -w big.txt > cases/{}/scrape/{}-{}-scrape-dns.txt".format(domain, folder, today(), domain))
 
 def archive_site(url):
 
@@ -115,13 +108,12 @@ def main():
 
     if setup:
         print(first_run())
+    if archive_server:
+        start_archivebox(archive_server)
 
     if domain is not None:
         if shodan:
             get_shodan(domain, shodan)
-        if archive_server:
-            start_archivebox(archive_server)
-            archive_site(domain)
         if _scrape is not None:
             scrape_domain(domain, _scrape)
 
