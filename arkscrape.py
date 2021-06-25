@@ -1,5 +1,4 @@
 import os
-import pandas
 import json
 from argparse import ArgumentParser
 from dotenv import load_dotenv

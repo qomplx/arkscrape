@@ -1,4 +1,3 @@
 shodan
-pandas
 argparse
 dotenv
